@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía de Git</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-main: #0d1117;
+      --bg-card: #161b22;
+      --bg-card-2: #1c2128;
+      --bg-terminal: #010409;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-bright: #e6edf3;
+      --accent-git: #F14E32;
+      --accent-git-dark: #c73e28;
+      --accent-green: #2ea043;
+      --accent-green-bright: #3fb950;
+      --accent-blue: #388bfd;
+      --accent-yellow: #d29922;
+      --accent-purple: #8b949e;
+      --border-color: #30363d;
+      --border-color-soft: #21262d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-main); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-brand {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-brand .git-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .git-badge {
+      background: var(--accent-git);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.3;
+      margin-top: 6px;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 14px 18px 6px;
+    }
+
+    .sidebar-nav { padding: 4px 10px; }
+
+    .sidebar-nav .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .sidebar-nav .nav-link:hover {
+      background: var(--bg-card-2);
+      color: var(--text-bright);
+    }
+
+    .sidebar-nav .nav-link.active {
+      background: rgba(241,78,50,0.12);
+      color: var(--accent-git);
+    }
+
+    .sidebar-nav .nav-link .bi { font-size: 14px; flex-shrink: 0; }
+
+    .progress-bar-sidebar {
+      height: 3px;
+      background: var(--border-color);
+      margin: 0 18px 0;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-sidebar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-git), var(--accent-green));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 18px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* ── MAIN CONTENT ── */
+    #main-content {
+      margin-left: 260px;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-breadcrumb {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .section-breadcrumb span { color: var(--text-bright); font-weight: 600; }
+
+    #hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* ── SECTIONS ── */
+    .content-section { display: none; padding: 32px 32px 60px; max-width: 900px; }
+    .content-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── HERO ── */
+    .hero-section {
+      background: linear-gradient(135deg, var(--bg-card) 0%, #0d1117 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 40px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(241,78,50,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-section::after {
+      content: 'git';
+      position: absolute;
+      bottom: -20px; right: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 120px;
+      font-weight: 700;
+      color: rgba(241,78,50,0.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .hero-title {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--text-bright);
+    }
+
+    .hero-title .highlight { color: var(--accent-git); }
+    .hero-title .highlight-green { color: var(--accent-green-bright); }
+
+    /* ── SECTION TITLES ── */
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title .title-icon {
+      width: 34px; height: 34px;
+      background: rgba(241,78,50,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-git);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .section-subtitle {
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      font-size: 14.5px;
+    }
+
+    h3.sub-heading {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color-soft);
+    }
+
+    h3.sub-heading .bi { color: var(--accent-green); }
+
+    /* ── CARDS ── */
+    .git-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+
+    .git-card-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── TERMINAL ── */
+    .terminal {
+      background: var(--bg-terminal);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .terminal-header {
+      background: #1a1f27;
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .terminal-dots { display: flex; gap: 6px; }
+    .terminal-dots span {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .terminal-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 1;
+      text-align: center;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--accent-green); color: var(--accent-green); }
+    .copy-btn.copied { border-color: var(--accent-green); color: var(--accent-green); }
+
+    .terminal-body { padding: 16px 18px; line-height: 1.8; overflow-x: auto; }
+
+    .t-prompt { color: var(--accent-green-bright); }
+    .t-cmd { color: var(--text-bright); }
+    .t-comment { color: var(--text-muted); font-style: italic; }
+    .t-output { color: #7ee787; }
+    .t-warn { color: var(--accent-yellow); }
+    .t-error { color: #f85149; }
+    .t-git { color: var(--accent-git); }
+    .t-branch { color: #d2a8ff; }
+    .t-file { color: #79c0ff; }
+    .t-url { color: var(--accent-blue); }
+    .t-conflict-head { color: #ff7b72; }
+    .t-conflict-sep { color: var(--accent-yellow); }
+    .t-conflict-branch { color: #7ee787; }
+
+    /* ── ALERTS ── */
+    .alert-git {
+      background: rgba(241,78,50,0.08);
+      border: 1px solid rgba(241,78,50,0.3);
+      border-left: 3px solid var(--accent-git);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+      color: var(--text-main);
+    }
+
+    .alert-git .alert-title {
+      font-weight: 700;
+      color: var(--accent-git);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .alert-green {
+      background: rgba(46,160,67,0.08);
+      border: 1px solid rgba(46,160,67,0.3);
+      border-left: 3px solid var(--accent-green);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .alert-green .alert-title {
+      font-weight: 700;
+      color: var(--accent-green-bright);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .alert-blue {
+      background: rgba(56,139,253,0.08);
+      border: 1px solid rgba(56,139,253,0.3);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .alert-blue .alert-title {
+      font-weight: 700;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .alert-yellow {
+      background: rgba(210,153,34,0.08);
+      border: 1px solid rgba(210,153,34,0.3);
+      border-left: 3px solid var(--accent-yellow);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .alert-yellow .alert-title {
+      font-weight: 700;
+      color: var(--accent-yellow);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    /* ── BADGES & TAGS ── */
+    .badge-git { background: rgba(241,78,50,0.2); color: var(--accent-git); border: 1px solid rgba(241,78,50,0.3); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+    .badge-green { background: rgba(46,160,67,0.2); color: var(--accent-green-bright); border: 1px solid rgba(46,160,67,0.3); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+    .badge-blue { background: rgba(56,139,253,0.2); color: var(--accent-blue); font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(110,118,129,0.15);
+      color: #ff7b72;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+    }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .flow-box {
+      background: var(--bg-card-2);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 110px;
+    }
+
+    .flow-box .label { color: var(--text-muted); font-size: 10px; display: block; margin-bottom: 3px; }
+    .flow-box .name { color: var(--text-bright); font-weight: 700; }
+
+    .flow-arrow {
+      color: var(--accent-git);
+      font-size: 18px;
+      padding: 0 6px;
+      flex-shrink: 0;
+    }
+
+    .flow-box.highlighted {
+      border-color: var(--accent-git);
+      background: rgba(241,78,50,0.08);
+    }
+
+    .flow-box.highlighted .name { color: var(--accent-git); }
+
+    /* ── STEP LIST ── */
+    .step-list { list-style: none; padding: 0; }
+    .step-list li {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 26px; height: 26px;
+      background: var(--accent-git);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── BRANCH VISUAL ── */
+    .branch-visual {
+      background: var(--bg-terminal);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    .bv-main { color: var(--accent-git); }
+    .bv-feat { color: #d2a8ff; }
+    .bv-fix { color: #7ee787; }
+    .bv-node {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin: 0 3px;
+    }
+
+    /* ── GITIGNORE ── */
+    .file-preview {
+      background: var(--bg-terminal);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0;
+    }
+
+    .file-preview-header {
+      background: #1a1f27;
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .file-preview-header .bi { color: var(--accent-yellow); }
+
+    .file-preview-body {
+      padding: 14px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.9;
+    }
+
+    .fi-comment { color: var(--text-muted); }
+    .fi-entry { color: #7ee787; }
+    .fi-section { color: #d2a8ff; font-weight: 700; margin-top: 4px; display: block; }
+
+    /* ── PROGRESS ── */
+    .module-progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .module-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .module-dot.done { background: var(--accent-green); }
+    .module-dot.active { background: var(--accent-git); transform: scale(1.3); }
+
+    /* ── CONFLICT RESOLVER ── */
+    .conflict-block {
+      background: var(--bg-terminal);
+      border: 1px solid #f85149;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+    }
+
+    .conflict-block-header {
+      background: rgba(248,81,73,0.1);
+      border-bottom: 1px solid rgba(248,81,73,0.3);
+      padding: 7px 14px;
+      color: #f85149;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .conflict-block-body { padding: 14px 18px; line-height: 1.9; }
+
+    /* ── TOOLS GRID ── */
+    .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .tools-grid { grid-template-columns: 1fr; } }
+
+    .tool-card {
+      background: var(--bg-card-2);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 18px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .tool-card:hover { border-color: var(--accent-green); transform: translateY(-2px); }
+    .tool-card .tool-icon { font-size: 28px; margin-bottom: 10px; }
+    .tool-card .tool-name { font-weight: 700; color: var(--text-bright); font-size: 15px; }
+    .tool-card .tool-desc { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+
+    /* ── NAV PREV/NEXT ── */
+    .section-nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .nav-sec-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-sec-btn:hover { border-color: var(--accent-git); color: var(--accent-git); }
+    .nav-sec-btn.next-btn { background: rgba(241,78,50,0.1); border-color: rgba(241,78,50,0.4); color: var(--accent-git); }
+    .nav-sec-btn.next-btn:hover { background: rgba(241,78,50,0.2); }
+
+    /* ── TABLE ── */
+    .git-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .git-table th {
+      background: var(--bg-card-2);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+    .git-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color-soft);
+      vertical-align: top;
+    }
+    .git-table tr:last-child td { border-bottom: none; }
+    .git-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main-content { margin-left: 0; }
+      #hamburger-btn { display: block; }
+      .content-section { padding: 20px 16px 50px; }
+      .tools-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── OVERLAY ── */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+    }
+    #sidebar-overlay.show { display: block; }
+
+    /* ── CHECKMARK ANIMATION ── */
+    @keyframes checkPop { 0% { transform: scale(0); } 70% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    .check-pop { animation: checkPop 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="git-logo">
+      <span class="git-badge"><i class="bi bi-git"></i> GIT</span>
+      <span style="color: var(--accent-green); font-family: 'JetBrains Mono', monospace; font-size: 12px;">DataScience</span>
+    </div>
+    <!-- <div class="brand-title">Guía Definitiva para<br>proyectos en equipo con Flask</div> -->
+    <div class="progress-bar-sidebar mt-2">
+      <div class="fill" id="progress-fill"></div>
+    </div>
+    <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="progress-text">0% completado</div>
+  </div>
+
+  <div class="nav-section-label">Fundamentos</div>
+  <ul class="sidebar-nav list-unstyled">
+    <li><button class="nav-link active" onclick="showSection('intro')"><i class="bi bi-house-door"></i> Inicio & ¿Por qué Git?</button></li>
+    <li><button class="nav-link" onclick="showSection('setup')"><i class="bi bi-gear"></i> Instalación & Config</button></li>
+    <li><button class="nav-link" onclick="showSection('gitignore')"><i class="bi bi-shield-check"></i> .gitignore & Flask</button></li>
+  </ul>
+
+  <div class="nav-section-label">Flujo Básico</div>
+  <ul class="sidebar-nav list-unstyled">
+    <li><button class="nav-link" onclick="showSection('repos')"><i class="bi bi-folder2-open"></i> Repositorios</button></li>
+    <li><button class="nav-link" onclick="showSection('staging')"><i class="bi bi-layers"></i> Staging & Commits</button></li>
+    <li><button class="nav-link" onclick="showSection('remote')"><i class="bi bi-cloud-upload"></i> Push, Pull & Log</button></li>
+  </ul>
+
+  <div class="nav-section-label">Trabajo en Equipo</div>
+  <ul class="sidebar-nav list-unstyled">
+    <li><button class="nav-link" onclick="showSection('branches')"><i class="bi bi-diagram-2"></i> Ramas (Branches)</button></li>
+    <li><button class="nav-link" onclick="showSection('merge')"><i class="bi bi-intersect"></i> Merge & Conflictos</button></li>
+    <li><button class="nav-link" onclick="showSection('tools')"><i class="bi bi-window"></i> Herramientas GUI</button></li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <div style="font-size: 11px; color: var(--text-muted);">
+      <i class="bi bi-mortarboard" style="color: var(--accent-git);"></i>
+      Para estudiantes de Ciencia de Datos
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════ MAIN CONTENT ══════════════════════════════ -->
+<main id="main-content">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button id="hamburger-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <div class="section-breadcrumb">Git para DataScience / <span id="breadcrumb-text">Inicio</span></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="badge-git"><i class="bi bi-git"></i> git</span>
+      <span class="badge-green"><i class="bi bi-check-circle"></i> v2.x</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SECCIÓN 1: INTRO ═══════════════════ -->
+  <section id="section-intro" class="content-section active">
+    <div class="hero-section">
+      <div class="hero-title">
+        Guía Definitiva de <span class="highlight">Git</span> para<br>
+        <span class="highlight-green">Data Science</span>
+      </div>
+      <p style="color: var(--text-muted); margin-top: 14px; max-width: 520px; font-size: 15px;">
+        Sobreviviendo al código en equipo. Aprende a colaborar en tu proyecto Flask sin pisarte el código con tus compañeros.
+      </p>
+      <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+        <span class="badge-git"><i class="bi bi-people"></i> Grupos de 3</span>
+        <span class="badge-green"><i class="bi bi-braces"></i> Flask + Python</span>
+        <span class="badge-blue"><i class="bi bi-github"></i> GitHub</span>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-question-circle"></i></div>
+      ¿Qué es Git y por qué salva vidas?
+    </div>
+    <p class="section-subtitle">Imagina este escenario real con tu equipo...</p>
+
+    <div class="alert-git">
+      <div class="alert-title"><i class="bi bi-exclamation-triangle-fill"></i> Escenario sin Git (el caos)</div>
+      <p style="font-size: 13.5px;">María hace cambios en <code>app.py</code> y lo manda por WhatsApp. Juan también hizo cambios en <code>app.py</code> y los mandó por correo. Pedro mezcla ambos archivos a mano, borra algo sin querer, y nadie sabe qué versión era la buena. Son las 2 AM y el proyecto se entrega mañana. 😱</p>
+    </div>
+
+    <div class="alert-green">
+      <div class="alert-title"><i class="bi bi-shield-check-fill"></i> Con Git (el orden)</div>
+      <p style="font-size: 13.5px;">Cada integrante trabaja en su propia rama. Los cambios se guardan con historial completo. Si algo se rompe, se revierte en segundos. El equipo fusiona el trabajo limpiamente. ✅</p>
+    </div>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-book" style="color: var(--accent-blue);"></i> Definición concreta</div>
+      <p>
+        <strong style="color: var(--text-bright);">Git</strong> es un sistema de <strong>control de versiones distribuido</strong>. Registra cada cambio que hacés en tu código, quién lo hizo y cuándo. Es como un "Ctrl+Z" infinito y colaborativo para tu proyecto.
+      </p>
+      <p style="margin-top: 10px;">
+        <strong style="color: var(--text-bright);">GitHub</strong> es la nube donde vive el repositorio. Git corre en tu computadora; GitHub es el servidor compartido.
+      </p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-diagram-3"></i> El flujo completo de trabajo</h3>
+    <div class="flow-diagram">
+      <div class="flow-box"><span class="label">Tu compu</span><span class="name">📁 Directorio<br>de trabajo</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlighted"><span class="label">git add</span><span class="name">📦 Staging<br>Area</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><span class="label">git commit</span><span class="name">💾 Repo<br>Local</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><span class="label">git push</span><span class="name">☁️ GitHub<br>Remoto</span></div>
+    </div>
+
+    <div class="alert-blue">
+      <div class="alert-title"><i class="bi bi-info-circle-fill"></i> Conceptos clave</div>
+      <ul style="font-size: 13.5px; padding-left: 18px;">
+        <li><strong style="color: var(--text-bright);">Repositorio (repo):</strong> La carpeta de tu proyecto bajo control de Git. Contiene todo el historial.</li>
+        <li style="margin-top: 6px;"><strong style="color: var(--text-bright);">Commit:</strong> Una "foto" del estado de tu código en un momento dado. Cada commit tiene un mensaje descriptivo.</li>
+        <li style="margin-top: 6px;"><strong style="color: var(--text-bright);">Rama (branch):</strong> Una línea de desarrollo paralela. Permite trabajar sin afectar al resto del equipo.</li>
+        <li style="margin-top: 6px;"><strong style="color: var(--text-bright);">Merge:</strong> La acción de fusionar el trabajo de una rama con otra.</li>
+      </ul>
+    </div>
+
+    <div class="section-nav-buttons">
+      <div></div>
+      <button class="nav-sec-btn next-btn" onclick="showSection('setup')"><i class="bi bi-arrow-right"></i> Siguiente: Instalación</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 2: SETUP ═══════════════════ -->
+  <section id="section-setup" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-gear"></i></div>
+      Instalación & Configuración Inicial
+    </div>
+    <p class="section-subtitle">Hacé esto una sola vez en tu computadora. Luego nunca más lo vas a necesitar.</p>
+
+    <h3 class="sub-heading"><i class="bi bi-download"></i> Paso 1: Instalar Git</h3>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-windows" style="color: var(--accent-blue);"></i> Windows</div>
+      <p style="font-size: 13.5px;">Descargá el instalador desde <strong><a href="https://git-scm.com/download/win" target="_blank" style="color: var(--accent-blue);">git-scm.com</a></strong>. Durante la instalación, asegurate de seleccionar <em>"Git Bash"</em> y <em>"Use Git from the command line and also from 3rd-party software"</em>.</p>
+    </div>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-apple" style="color: var(--text-bright);"></i> macOS</div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+          <div class="terminal-title">Terminal — macOS</div>
+          <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+        </div>
+        <div class="terminal-body">
+          <span class="t-comment"># Instalá Homebrew primero si no lo tenés:</span><br>
+          <span class="t-prompt">$ </span><span class="t-cmd">/bin/bash -c "$(curl -fsSL https://brew.sh/install.sh)"</span><br><br>
+          <span class="t-comment"># Luego instalá Git:</span><br>
+          <span class="t-prompt">$ </span><span class="t-cmd">brew install git</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-ubuntu" style="color: #E95420;"></i> Linux (Ubuntu/Debian)</div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+          <div class="terminal-title">Terminal — Linux</div>
+          <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+        </div>
+        <div class="terminal-body">
+          <span class="t-prompt">$ </span><span class="t-cmd">sudo apt update && sudo apt install git -y</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">Verificar instalación</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-prompt">$ </span><span class="t-cmd">git --version</span><br>
+        <span class="t-output">git version 2.43.0</span>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-github"></i> Paso 2: Crear cuenta en GitHub</h3>
+    <ul class="step-list">
+      <li><div class="step-num">1</div><div>Andá a <a href="https://github.com" target="_blank" style="color: var(--accent-blue);">github.com</a> y hacé clic en <strong>"Sign up"</strong>.</div></li>
+      <li><div class="step-num">2</div><div>Elegí un nombre de usuario profesional (lo va a ver tu futuro empleador). Usá algo como <code>juan-garcia-ds</code>.</div></li>
+      <li><div class="step-num">3</div><div>Verificá tu correo electrónico.</div></li>
+      <li><div class="step-num">4</div><div>Explorá tu perfil y empezá a construir tu portafolio. ¡Cada commit cuenta!</div></li>
+    </ul>
+
+    <h3 class="sub-heading"><i class="bi bi-person-badge"></i> Paso 3: Configurar Git con tu identidad</h3>
+    <p style="margin-bottom: 10px;">Esto le dice a Git quién sos vos. <strong>Hacé esto exactamente una vez</strong> en tu computadora.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git config — Configuración global</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Reemplazá los datos con los tuyos:</span><br><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git config --global user.name <span class="t-git">"Juan García"</span></span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git config --global user.email <span class="t-git">"juan@email.com"</span></span><br><br>
+        <span class="t-comment"># Configurá el editor por defecto (VS Code recomendado):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git config --global core.editor <span class="t-git">"code --wait"</span></span><br><br>
+        <span class="t-comment"># En Windows: establecé el salto de línea (evita bugs de compatibilidad):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git config --global core.autocrlf <span class="t-git">true</span></span><br><br>
+        <span class="t-comment"># Verificar que todo quedó bien:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git config --list</span><br>
+        <span class="t-output">user.name=Juan García</span><br>
+        <span class="t-output">user.email=juan@email.com</span><br>
+        <span class="t-output">core.editor=code --wait</span>
+      </div>
+    </div>
+
+    <div class="alert-git">
+      <div class="alert-title"><i class="bi bi-exclamation-triangle-fill"></i> Regla de Oro #1</div>
+      <p style="font-size: 13.5px;">Usá el <strong>mismo email</strong> con el que creaste tu cuenta de GitHub. Git usa este email para asociar tus commits a tu perfil. Si usás uno diferente, tus contribuciones no van a aparecer en tu gráfico de actividad de GitHub.</p>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('intro')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('gitignore')"><i class="bi bi-arrow-right"></i> Siguiente: .gitignore</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 3: GITIGNORE ═══════════════════ -->
+  <section id="section-gitignore" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-shield-check"></i></div>
+      El archivo .gitignore
+    </div>
+    <p class="section-subtitle">El guardián de tu repositorio. Decide qué <em>no</em> debe subirse a la nube.</p>
+
+    <div class="alert-yellow">
+      <div class="alert-title"><i class="bi bi-exclamation-diamond-fill"></i> ¿Por qué es vital para proyectos Flask?</div>
+      <p style="font-size: 13.5px;">En proyectos Python/Flask se generan automáticamente carpetas y archivos que <strong>nunca deben subirse</strong> a GitHub porque:</p>
+      <ul style="font-size: 13.5px; padding-left: 18px; margin-top: 8px;">
+        <li>Son específicos de <em>tu</em> computadora y no van a funcionar en la del compañero.</li>
+        <li>Pueden pesar cientos de megabytes (el entorno virtual).</li>
+        <li>Pueden contener <strong>contraseñas y claves secretas</strong> (¡el error más grave!).</li>
+        <li>Ensucian el historial del repositorio con archivos irrelevantes.</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-file-earmark-code"></i> .gitignore para proyectos Flask</h3>
+    <p style="margin-bottom: 12px;">Creá este archivo en la <strong>raíz de tu proyecto</strong> (al mismo nivel que <code>app.py</code>):</p>
+
+    <div class="file-preview">
+      <div class="file-preview-header">
+        <i class="bi bi-file-earmark-text"></i> .gitignore
+      </div>
+      <div class="file-preview-body">
+        <span class="fi-section"># ═══ Entorno Virtual de Python ═══</span><br>
+        <span class="fi-comment"># NUNCA subir el venv. Ocupa cientos de MB.</span><br>
+        <span class="fi-comment"># Cada quien instala el suyo con: pip install -r requirements.txt</span><br>
+        <span class="fi-entry">venv/</span><br>
+        <span class="fi-entry">.venv/</span><br>
+        <span class="fi-entry">env/</span><br>
+        <span class="fi-entry">ENV/</span><br><br>
+
+        <span class="fi-section"># ═══ Caché de Python ═══</span><br>
+        <span class="fi-comment"># Python crea estos archivos automáticamente al ejecutar el código</span><br>
+        <span class="fi-entry">__pycache__/</span><br>
+        <span class="fi-entry">*.py[cod]</span><br>
+        <span class="fi-entry">*.pyo</span><br>
+        <span class="fi-entry">*.pyc</span><br><br>
+
+        <span class="fi-section"># ═══ Variables de entorno y secretos ═══</span><br>
+        <span class="fi-comment"># CRÍTICO: aquí van contraseñas, API keys, etc.</span><br>
+        <span class="fi-entry">.env</span><br>
+        <span class="fi-entry">.env.local</span><br>
+        <span class="fi-entry">*.env</span><br><br>
+
+        <span class="fi-section"># ═══ Base de datos local ═══</span><br>
+        <span class="fi-entry">*.db</span><br>
+        <span class="fi-entry">*.sqlite3</span><br><br>
+
+        <span class="fi-section"># ═══ Sistema operativo ═══</span><br>
+        <span class="fi-entry">.DS_Store</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fi-comment"># macOS</span><br>
+        <span class="fi-entry">Thumbs.db</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fi-comment"># Windows</span><br><br>
+
+        <span class="fi-section"># ═══ IDEs y editores ═══</span><br>
+        <span class="fi-entry">.vscode/</span><br>
+        <span class="fi-entry">.idea/</span><br>
+        <span class="fi-entry">*.swp</span>
+      </div>
+    </div>
+
+    <div class="alert-git">
+      <div class="alert-title"><i class="bi bi-fire"></i> Regla de Oro #2 — La más importante</div>
+      <p style="font-size: 13.5px;"><strong>Jamás subas archivos <code>.env</code> a GitHub.</strong> Esos archivos contienen contraseñas, claves de API y tokens de bases de datos. Si lo subís aunque sea por un segundo, considerá esa clave comprometida. Hay bots que escanean GitHub 24/7 buscando exactamente eso. Siempre agregá <code>.env</code> al <code>.gitignore</code> antes de hacer el primer commit.</p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-file-earmark-text"></i> requirements.txt — El sustituto del venv</h3>
+    <p style="margin-bottom: 12px;">En lugar de subir el entorno virtual, compartís un archivo con la lista de dependencias:</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">Generar y usar requirements.txt</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Vos (líder del proyecto) generás el archivo:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">pip freeze > requirements.txt</span><br><br>
+
+        <span class="t-comment"># Subís requirements.txt a GitHub (NO el venv).</span><br><br>
+
+        <span class="t-comment"># Tus compañeros, luego de hacer git clone, ejecutan:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">python -m venv venv</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-comment"># Crean su propio entorno virtual</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">source venv/bin/activate</span>&nbsp;&nbsp;<span class="t-comment"># Linux/Mac</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">venv\Scripts\activate</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-comment"># Windows</span><br>
+        <span class="t-prompt">(venv) $ </span><span class="t-cmd">pip install -r requirements.txt</span><br>
+        <span class="t-output">Successfully installed Flask-3.0.0 Werkzeug-3.0.1 ...</span>
+      </div>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('setup')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('repos')"><i class="bi bi-arrow-right"></i> Siguiente: Repositorios</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 4: REPOS ═══════════════════ -->
+  <section id="section-repos" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-folder2-open"></i></div>
+      Crear y Conectar Repositorios
+    </div>
+    <p class="section-subtitle">Hay dos maneras de empezar. La que uses depende de si ya existe el proyecto o no.</p>
+
+    <h3 class="sub-heading"><i class="bi bi-1-circle"></i> Opción A: Empezar desde cero (git init)</h3>
+    <p style="margin-bottom: 12px;">Usás esta opción cuando el proyecto <strong>todavía no existe</strong> en ningún lado. La persona líder del equipo hace esto.</p>
+
+    <ul class="step-list">
+      <li>
+        <div class="step-num">1</div>
+        <div style="width: 100%;">
+          <strong style="color: var(--text-bright);">Crear el repositorio en GitHub primero</strong><br>
+          <span style="font-size: 13.5px; color: var(--text-muted);">Andá a github.com → botón verde "New" → Poné el nombre del repo (ej: <code>proyecto-flask-equipo</code>) → <strong>NO</strong> inicialices con README → Create repository.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div style="width: 100%;">
+          <strong style="color: var(--text-bright);">Inicializar el repo local y conectarlo</strong>
+          <div class="terminal">
+            <div class="terminal-header">
+              <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+              <div class="terminal-title">git init + remote add</div>
+              <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+            </div>
+            <div class="terminal-body">
+              <span class="t-comment"># Entrá a la carpeta de tu proyecto:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">cd mi-proyecto-flask</span><br><br>
+
+              <span class="t-comment"># Inicializá Git en esa carpeta (crea la carpeta .git oculta):</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git init</span><br>
+              <span class="t-output">Initialized empty Git repository in /mi-proyecto-flask/.git/</span><br><br>
+
+              <span class="t-comment"># Creá el .gitignore ANTES de hacer cualquier commit:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">touch .gitignore</span>&nbsp;&nbsp;<span class="t-comment"># (luego completalo con el contenido de la sección anterior)</span><br><br>
+
+              <span class="t-comment"># Conectar con el repositorio de GitHub (copiá la URL del repo):</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git remote add origin <span class="t-url">https://github.com/tu-usuario/proyecto-flask-equipo.git</span></span><br><br>
+
+              <span class="t-comment"># Verificar que la conexión quedó bien:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git remote -v</span><br>
+              <span class="t-output">origin  https://github.com/tu-usuario/proyecto-flask-equipo.git (fetch)</span><br>
+              <span class="t-output">origin  https://github.com/tu-usuario/proyecto-flask-equipo.git (push)</span>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <h3 class="sub-heading"><i class="bi bi-2-circle"></i> Opción B: Clonar un repo existente (git clone)</h3>
+    <p style="margin-bottom: 12px;">Usás esta opción cuando el proyecto <strong>ya existe en GitHub</strong>. Tus compañeros hacen esto para unirse al proyecto.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git clone — Descargar un repositorio existente</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Copiá la URL del repositorio desde GitHub (botón verde "Code")</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git clone <span class="t-url">https://github.com/lider/proyecto-flask-equipo.git</span></span><br>
+        <span class="t-output">Cloning into 'proyecto-flask-equipo'...</span><br>
+        <span class="t-output">remote: Enumerating objects: 42, done.</span><br>
+        <span class="t-output">Receiving objects: 100% (42/42), 15.23 KiB | 2.18 MiB/s, done.</span><br><br>
+
+        <span class="t-comment"># Entrá a la carpeta descargada:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">cd proyecto-flask-equipo</span><br><br>
+
+        <span class="t-comment"># Verificá que ya está conectado a GitHub automáticamente:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git remote -v</span><br>
+        <span class="t-output">origin  https://github.com/lider/proyecto-flask-equipo.git (fetch)</span><br>
+        <span class="t-output">origin  https://github.com/lider/proyecto-flask-equipo.git (push)</span>
+      </div>
+    </div>
+
+    <div class="alert-green">
+      <div class="alert-title"><i class="bi bi-lightbulb-fill"></i> ¿Cuál usar en el proyecto grupal?</div>
+      <p style="font-size: 13.5px;">
+        <strong>Persona 1 (Líder):</strong> Crea el repo en GitHub → lo clona o usa <code>git init</code> + <code>remote add</code> → hace el primer commit con la estructura básica.<br>
+        <strong>Personas 2 y 3:</strong> Usan <code>git clone</code> con la URL que les pasa el líder. ¡Así de simple!
+      </p>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('gitignore')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('staging')"><i class="bi bi-arrow-right"></i> Siguiente: Staging</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 5: STAGING & COMMITS ═══════════════════ -->
+  <section id="section-staging" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-layers"></i></div>
+      Staging Area & Commits
+    </div>
+    <p class="section-subtitle">El corazón de Git. Acá es donde guardás tus avances de forma permanente.</p>
+
+    <h3 class="sub-heading"><i class="bi bi-camera"></i> ¿Qué es el Staging Area?</h3>
+    <p style="margin-bottom: 14px;">Pensalo como una <strong>zona de preparación</strong>. Es el lugar donde ponés los cambios que querés incluir en tu próxima "foto" (commit). No todos los archivos modificados tienen que ir en el mismo commit.</p>
+
+    <div class="flow-diagram">
+      <div class="flow-box"><span class="label">modificaste</span><span class="name">📝 Working<br>Directory</span></div>
+      <div class="flow-arrow">→ git add →</div>
+      <div class="flow-box highlighted"><span class="label">preparado</span><span class="name">📦 Staging<br>Area</span></div>
+      <div class="flow-arrow">→ git commit →</div>
+      <div class="flow-box"><span class="label">guardado</span><span class="name">💾 Repositorio<br>Local</span></div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-search"></i> git status — Ver qué está pasando</h3>
+    <p style="margin-bottom: 10px;">Tu comando favorito. Usalo constantemente para saber en qué estado está tu repositorio.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git status — El diagnóstico</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-prompt">$ </span><span class="t-cmd">git status</span><br><br>
+        <span class="t-output">On branch feature/login</span><br>
+        <span class="t-output">Your branch is up to date with 'origin/feature/login'.</span><br><br>
+        <span class="t-warn">Changes not staged for commit:</span><br>
+        <span class="t-warn">  (use "git add &lt;file&gt;..." to update what will be committed)</span><br>
+        <span class="t-error">        modified:   app.py</span><br>
+        <span class="t-error">        modified:   templates/login.html</span><br><br>
+        <span class="t-warn">Untracked files:</span><br>
+        <span class="t-warn">  (use "git add &lt;file&gt;..." to include in what will be committed)</span><br>
+        <span class="t-error">        static/css/styles.css</span>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-plus-circle"></i> git add — Preparar cambios</h3>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git add — Variantes</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Agregar un archivo específico (recomendado para commits precisos):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git add <span class="t-file">app.py</span></span><br><br>
+
+        <span class="t-comment"># Agregar múltiples archivos específicos:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git add <span class="t-file">app.py</span> <span class="t-file">templates/login.html</span></span><br><br>
+
+        <span class="t-comment"># Agregar TODOS los cambios en el directorio actual:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git add .</span><br><br>
+
+        <span class="t-comment"># Verificar que quedaron en staging (aparecen en verde):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git status</span><br>
+        <span class="t-output">Changes to be committed:</span><br>
+        <span class="t-output">  (use "git restore --staged &lt;file&gt;..." to unstage)</span><br>
+        <span class="t-output" style="color: #7ee787;">        modified:   app.py</span><br>
+        <span class="t-output" style="color: #7ee787;">        modified:   templates/login.html</span>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-floppy"></i> git commit — Guardar los cambios</h3>
+    <p style="margin-bottom: 10px;">Un commit es permanente en el historial. El mensaje que escribís es crucial.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git commit</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># La forma más común (mensaje corto):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git commit -m <span class="t-git">"feat: agregar formulario de login con validación"</span></span><br>
+        <span class="t-output">[feature/login 3f4a2b1] feat: agregar formulario de login con validación</span><br>
+        <span class="t-output"> 2 files changed, 47 insertions(+), 3 deletions(-)</span>
+      </div>
+    </div>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-chat-quote" style="color: var(--accent-yellow);"></i> Cómo escribir buenos mensajes de commit</div>
+      <p style="margin-bottom: 12px; font-size: 13.5px;">Una convención muy usada es el <strong>Conventional Commits</strong>:</p>
+      <table class="git-table">
+        <thead>
+          <tr><th>Prefijo</th><th>Cuándo usarlo</th><th>Ejemplo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>feat:</code></td>
+            <td>Nueva funcionalidad</td>
+            <td><code>feat: agregar endpoint de usuarios</code></td>
+          </tr>
+          <tr>
+            <td><code>fix:</code></td>
+            <td>Corrección de un bug</td>
+            <td><code>fix: corregir error 404 en /login</code></td>
+          </tr>
+          <tr>
+            <td><code>docs:</code></td>
+            <td>Solo documentación</td>
+            <td><code>docs: actualizar README con instrucciones</code></td>
+          </tr>
+          <tr>
+            <td><code>style:</code></td>
+            <td>Formato, CSS, sin lógica</td>
+            <td><code>style: centrar navbar en mobile</code></td>
+          </tr>
+          <tr>
+            <td><code>refactor:</code></td>
+            <td>Reestructurar código</td>
+            <td><code>refactor: extraer lógica de DB a models.py</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert-git">
+      <div class="alert-title"><i class="bi bi-x-circle-fill"></i> Mensajes de commit que NO deben existir</div>
+      <p style="font-size: 13.5px;">❌ <code>"cambios"</code> &nbsp;❌ <code>"arreglé cosas"</code> &nbsp;❌ <code>"asdfjkl"</code> &nbsp;❌ <code>"no sé qué hice"</code><br>
+      <span style="font-size: 13px; color: var(--text-muted); margin-top: 4px; display: block;">Un buen commit message es como dejarle una nota a tu yo del futuro (o a tu compañero).</span></p>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('repos')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('remote')"><i class="bi bi-arrow-right"></i> Siguiente: Push & Pull</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 6: REMOTE / PUSH / PULL / LOG ═══════════════════ -->
+  <section id="section-remote" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-cloud-upload"></i></div>
+      Push, Pull & Historial
+    </div>
+    <p class="section-subtitle">Sincronizá tu trabajo con GitHub y mantené tu repositorio actualizado.</p>
+
+    <h3 class="sub-heading"><i class="bi bi-cloud-upload-fill"></i> git push — Subir a la nube</h3>
+    <p style="margin-bottom: 10px;">Una vez que hiciste tu commit local, subís esos cambios a GitHub para que los demás los puedan ver.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git push</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Subir la rama actual a GitHub:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git push origin <span class="t-branch">feature/login</span></span><br>
+        <span class="t-output">Enumerating objects: 7, done.</span><br>
+        <span class="t-output">Counting objects: 100% (7/7), done.</span><br>
+        <span class="t-output">Writing objects: 100% (4/4), 1.23 KiB | 1.23 MiB/s, done.</span><br>
+        <span class="t-output">To https://github.com/usuario/proyecto.git</span><br>
+        <span class="t-output">   abc1234..3f4a2b1  feature/login -> feature/login</span><br><br>
+
+        <span class="t-comment"># Primera vez que subís una nueva rama (necesita -u para trackearla):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git push -u origin <span class="t-branch">feature/login</span></span><br>
+        <span class="t-comment"># Después de esto, podés usar solo "git push" sin argumentos</span>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-cloud-download-fill"></i> git pull — Traer cambios de compañeros</h3>
+    <p style="margin-bottom: 10px;">Antes de empezar a trabajar cada día, <strong>siempre</strong> actualizá tu código local con los cambios de tus compañeros.</p>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git pull — Actualizar desde GitHub</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Descargar y aplicar los cambios de GitHub:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git pull origin <span class="t-branch">main</span></span><br>
+        <span class="t-output">remote: Enumerating objects: 5, done.</span><br>
+        <span class="t-output">Updating abc1234..9e2f341</span><br>
+        <span class="t-output">Fast-forward</span><br>
+        <span class="t-output"> templates/index.html | 12 ++++++------</span><br>
+        <span class="t-output"> 1 file changed, 6 insertions(+), 6 deletions(-)</span>
+      </div>
+    </div>
+
+    <div class="alert-green">
+      <div class="alert-title"><i class="bi bi-calendar-check-fill"></i> Regla de Oro #3 — El ritual diario</div>
+      <p style="font-size: 13.5px;">
+        <strong>Cada vez que te sentás a trabajar, lo primero es:</strong><br>
+        1. <code>git pull origin main</code> → actualizar la rama principal<br>
+        2. <code>git checkout tu-rama</code> → pasarte a tu rama<br>
+        3. <code>git merge main</code> → traer los últimos cambios a tu rama<br>
+        Esto evita el 90% de los conflictos molestos.
+      </p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-clock-history"></i> git log — Ver el historial</h3>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git log — Historial de commits</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Ver historial completo:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git log</span><br>
+        <span class="t-output">commit 3f4a2b1c8d9e1f2a3b4c5d6e7f8a9b0c1d2e3f4 (HEAD -> feature/login, origin/feature/login)</span><br>
+        <span class="t-output">Author: Juan García &lt;juan@email.com&gt;</span><br>
+        <span class="t-output">Date:   Wed Apr 15 21:32:10 2026 -0300</span><br>
+        <span class="t-output"></span><br>
+        <span class="t-output">    feat: agregar formulario de login con validación</span><br><br>
+        <span class="t-comment"># Vista compacta (la más útil):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git log --oneline --graph --all</span><br>
+        <span class="t-output">* 3f4a2b1 (HEAD -> feature/login) feat: agregar formulario de login</span><br>
+        <span class="t-output">* 9e2f341 (origin/main, main) fix: corregir ruta en app.py</span><br>
+        <span class="t-output">* ab12cd3 feat: estructura inicial del proyecto Flask</span>
+      </div>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('staging')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('branches')"><i class="bi bi-arrow-right"></i> Siguiente: Ramas</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 7: BRANCHES ═══════════════════ -->
+  <section id="section-branches" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-diagram-2"></i></div>
+      Ramas (Branches)
+    </div>
+    <p class="section-subtitle">El superpoder de Git para equipos. Cada integrante trabaja en su propia línea sin pisarse.</p>
+
+    <div class="alert-git">
+      <div class="alert-title"><i class="bi bi-exclamation-octagon-fill"></i> Regla de Oro #4 — La más importante del equipo</div>
+      <p style="font-size: 13.5px;"><strong>NADIE trabaja directamente en la rama <code>main</code> (o <code>master</code>).</strong> Jamás. La rama <code>main</code> es la versión "oficial" y funcional del proyecto. Cada persona crea su propia rama para desarrollar. Solo se fusiona a <code>main</code> cuando el código está revisado y aprobado.</p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-eye"></i> Visualización de ramas para el proyecto</h3>
+
+    <div class="branch-visual">
+      <span style="color: var(--text-muted); font-size: 11px;">─ historial del repositorio ──────────────────────────────────────────</span><br><br>
+
+      <span class="bv-main">main     ●────●────────────────────────●────●</span><br>
+      <span style="color: var(--text-muted);">           │    └──────────────┐     ↑    ↑</span><br>
+      <span class="bv-feat">feature/login     ●──●──●──●──┘     │    │  ← Juan</span><br>
+      <span style="color: var(--text-muted);">           │                        │    │</span><br>
+      <span class="bv-fix">feature/dashboard     ●──●──●──────────┘    │  ← María</span><br>
+      <span style="color: var(--text-muted);">           │                               │</span><br>
+      <span style="color: #79c0ff;">feature/api              ●──●──●──●──────────┘  ← Pedro</span>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-list-ul"></i> Comandos de ramas</h3>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title">git branch — Gestión de ramas</div>
+        <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment"># Ver todas las ramas (la activa tiene un *):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git branch</span><br>
+        <span class="t-output">  feature/dashboard</span><br>
+        <span class="t-output">* <span style="color: var(--accent-green-bright);">feature/login</span></span><br>
+        <span class="t-output">  main</span><br><br>
+
+        <span class="t-comment"># Ver también las ramas remotas (en GitHub):</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git branch -a</span><br><br>
+
+        <span class="t-comment"># Crear una nueva rama:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git branch <span class="t-branch">feature/nueva-funcionalidad</span></span><br><br>
+
+        <span class="t-comment"># Cambiar a otra rama:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git checkout <span class="t-branch">feature/nueva-funcionalidad</span></span><br>
+        <span class="t-output">Switched to branch 'feature/nueva-funcionalidad'</span><br><br>
+
+        <span class="t-comment"># ⭐ El atajo más usado: CREAR y CAMBIAR a la vez:</span><br>
+        <span class="t-prompt">$ </span><span class="t-cmd">git checkout -b <span class="t-branch">feature/nueva-funcionalidad</span></span><br>
+        <span class="t-output">Switched to a new branch 'feature/nueva-funcionalidad'</span>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-tags"></i> Convenciones para nombrar ramas</h3>
+
+    <div class="git-card">
+      <p style="font-size: 13.5px; margin-bottom: 12px;">Usa un formato consistente para que el equipo entienda qué hace cada rama sin leerla:</p>
+      <table class="git-table">
+        <thead>
+          <tr><th>Tipo</th><th>Formato</th><th>Ejemplo real del proyecto</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nueva función</td>
+            <td><code>feature/descripcion</code></td>
+            <td><code>feature/login-usuarios</code></td>
+          </tr>
+          <tr>
+            <td>Corrección</td>
+            <td><code>fix/descripcion</code></td>
+            <td><code>fix/error-404-dashboard</code></td>
+          </tr>
+          <tr>
+            <td>Hotfix urgente</td>
+            <td><code>hotfix/descripcion</code></td>
+            <td><code>hotfix/crash-al-guardar</code></td>
+          </tr>
+          <tr>
+            <td>Por persona</td>
+            <td><code>juan/descripcion</code></td>
+            <td><code>juan/modulo-graficos</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert-blue">
+      <div class="alert-title"><i class="bi bi-lightbulb-fill"></i> Buenas prácticas de naming</div>
+      <ul style="font-size: 13.5px; padding-left: 18px;">
+        <li>Usá <strong>minúsculas y guiones</strong>: <code>feature/login-usuarios</code> ✅ &nbsp;&nbsp;<code>Feature/LoginUsuarios</code> ❌</li>
+        <li>Sé descriptivo pero conciso: <code>feature/endpoint-prediccion-ml</code> ✅ &nbsp;&nbsp;<code>mi-rama</code> ❌</li>
+        <li>Sin espacios ni caracteres especiales.</li>
+      </ul>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('remote')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('merge')"><i class="bi bi-arrow-right"></i> Siguiente: Merge</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 8: MERGE & CONFLICTOS ═══════════════════ -->
+  <section id="section-merge" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-intersect"></i></div>
+      Merge & Resolución de Conflictos
+    </div>
+    <p class="section-subtitle">Fusionando el trabajo del equipo y sobreviviendo a los conflictos.</p>
+
+    <h3 class="sub-heading"><i class="bi bi-git"></i> git merge — Fusionar ramas</h3>
+    <p style="margin-bottom: 10px;">Cuando terminás tu funcionalidad, la integrás a <code>main</code>. El proceso es siempre el mismo:</p>
+
+    <ul class="step-list">
+      <li>
+        <div class="step-num">1</div>
+        <div style="width: 100%;">
+          <strong style="color: var(--text-bright);">Ir a la rama destino (main) y actualizarla</strong>
+          <div class="terminal">
+            <div class="terminal-header">
+              <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+              <div class="terminal-title">git merge — Paso a paso</div>
+              <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+            </div>
+            <div class="terminal-body">
+              <span class="t-comment"># 1. Ir a la rama principal:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git checkout <span class="t-branch">main</span></span><br><br>
+
+              <span class="t-comment"># 2. Traer lo último de GitHub:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git pull origin <span class="t-branch">main</span></span><br><br>
+
+              <span class="t-comment"># 3. Fusionar tu rama con main:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git merge <span class="t-branch">feature/login</span></span><br>
+              <span class="t-output">Updating 9e2f341..3f4a2b1</span><br>
+              <span class="t-output">Fast-forward</span><br>
+              <span class="t-output"> app.py              | 15 +++++++++++++++</span><br>
+              <span class="t-output"> templates/login.html | 42 ++++++++++++++++++++++++++++++++++++++++++</span><br>
+              <span class="t-output"> 2 files changed, 57 insertions(+)</span><br><br>
+
+              <span class="t-comment"># 4. Subir el main actualizado:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git push origin <span class="t-branch">main</span></span>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <h3 class="sub-heading"><i class="bi bi-exclamation-triangle-fill" style="color: #f85149;"></i> Conflictos de Merge — ¡No entres en pánico!</h3>
+
+    <div class="alert-yellow">
+      <div class="alert-title"><i class="bi bi-question-circle-fill"></i> ¿Por qué ocurre un conflicto?</div>
+      <p style="font-size: 13.5px;">Un conflicto ocurre cuando <strong>dos personas modificaron exactamente la misma línea</strong> del mismo archivo. Git no sabe cuál versión es la "correcta", entonces te pide que vos lo decidas manualmente.<br>
+      <span style="margin-top: 6px; display: block;">Por ejemplo: Juan editó la línea 15 de <code>app.py</code> y María también editó la línea 15 de <code>app.py</code>. Cuando se intenta hacer merge → 💥 conflicto.</span></p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-code-square"></i> ¿Cómo se ve un conflicto?</h3>
+    <p style="margin-bottom: 10px;">Git modifica el archivo afectado y agrega marcadores especiales:</p>
+
+    <div class="conflict-block">
+      <div class="conflict-block-header">⚠ CONFLICTO DETECTADO — app.py — línea 15</div>
+      <div class="conflict-block-body">
+        <span style="color: var(--text-muted);">...</span><br><br>
+        <span class="t-conflict-head"><<<<<<< HEAD</span><br>
+        <span class="t-comment"># Esta es TU versión (la que está en la rama actual, ej: main)</span><br>
+        <span style="color: #7ee787;">app.run(debug=True, host='0.0.0.0', port=5000)</span><br>
+        <span class="t-conflict-sep">=======</span><br>
+        <span class="t-comment"># Esta es la versión de tu compañero (la rama que estás mergeando)</span><br>
+        <span style="color: #79c0ff;">app.run(debug=False, port=8080)</span><br>
+        <span class="t-conflict-branch">>>>>>>> feature/config-servidor</span><br><br>
+        <span style="color: var(--text-muted);">...</span>
+      </div>
+    </div>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-info-circle" style="color: var(--accent-blue);"></i> Leyendo los marcadores</div>
+      <ul style="font-size: 13.5px; padding-left: 18px;">
+        <li><span style="color: #ff7b72;"><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code></span> → Empieza TU versión (la rama donde estás parado actualmente).</li>
+        <li style="margin-top: 6px;"><span style="color: var(--accent-yellow);"><code>=======</code></span> → Separador entre las dos versiones.</li>
+        <li style="margin-top: 6px;"><span style="color: #7ee787;"><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/config-servidor</code></span> → Empieza la versión de la otra rama.</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-wrench"></i> Cómo resolver el conflicto — paso a paso</h3>
+
+    <ul class="step-list">
+      <li>
+        <div class="step-num">1</div>
+        <div>
+          <strong style="color: var(--text-bright);">Abrí el archivo conflictivo</strong> en tu editor (VS Code lo resalta en rojo/verde automáticamente). Hablá con tu compañero y decidí juntos cuál es la versión correcta.
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div>
+          <strong style="color: var(--text-bright);">Editá el archivo manualmente</strong>. Borrá los marcadores y dejá solo el código correcto. Por ejemplo, si deciden combinar ambos:
+          <div class="terminal" style="margin-top: 10px;">
+            <div class="terminal-header">
+              <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+              <div class="terminal-title">app.py — Después de resolver</div>
+            </div>
+            <div class="terminal-body">
+              <span class="t-comment"># Borraste los marcadores, quedó el código correcto:</span><br>
+              <span style="color: #7ee787;">app.run(debug=True, host='0.0.0.0', port=5000)</span>
+            </div>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div>
+          <strong style="color: var(--text-bright);">Guardá el archivo y hacé git add</strong> para marcar el conflicto como resuelto:
+          <div class="terminal" style="margin-top: 10px;">
+            <div class="terminal-header">
+              <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+              <div class="terminal-title">Finalizar la resolución del conflicto</div>
+              <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
+            </div>
+            <div class="terminal-body">
+              <span class="t-comment"># Marcar el conflicto como resuelto:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git add <span class="t-file">app.py</span></span><br><br>
+
+              <span class="t-comment"># Confirmar el merge con un commit:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git commit -m <span class="t-git">"merge: resolver conflicto en app.py — mantener config debug=True"</span></span><br>
+              <span class="t-output">[main 7c1a3f2] merge: resolver conflicto en app.py</span><br><br>
+
+              <span class="t-comment"># Subir el resultado a GitHub:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git push origin <span class="t-branch">main</span></span>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="alert-green">
+      <div class="alert-title"><i class="bi bi-check-circle-fill"></i> Cómo minimizar conflictos</div>
+      <ul style="font-size: 13.5px; padding-left: 18px;">
+        <li><strong>Dividí bien el trabajo:</strong> Cada persona se encarga de archivos o módulos diferentes.</li>
+        <li style="margin-top: 5px;"><strong>Hacé pull frecuentemente:</strong> Al inicio de cada sesión de trabajo.</li>
+        <li style="margin-top: 5px;"><strong>Committeá seguido:</strong> Cambios pequeños y frecuentes evitan divergencias grandes.</li>
+        <li style="margin-top: 5px;"><strong>Comunicate:</strong> "Oye, voy a tocar <code>models.py</code>, ¿alguien lo está usando?"</li>
+      </ul>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('branches')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <button class="nav-sec-btn next-btn" onclick="showSection('tools')"><i class="bi bi-arrow-right"></i> Siguiente: Herramientas</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SECCIÓN 9: TOOLS ═══════════════════ -->
+  <section id="section-tools" class="content-section">
+    <div class="section-title">
+      <div class="title-icon"><i class="bi bi-window"></i></div>
+      Herramientas GUI — Git con botones
+    </div>
+    <p class="section-subtitle">Dominá la línea de comandos primero, pero sabé que existen herramientas visuales que facilitan mucho el trabajo.</p>
+
+    <div class="alert-blue">
+      <div class="alert-title"><i class="bi bi-info-circle-fill"></i> ¿Por qué aprender la terminal primero?</div>
+      <p style="font-size: 13.5px;">Las herramientas GUI son excelentes, pero si solo las usás a ellas, no entendés qué está pasando por debajo. Cuando algo falla (y va a fallar), vas a necesitar saber los comandos. Una vez que los dominás, las GUIs te hacen un 2x más rápido.</p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-grid"></i> Las mejores herramientas visuales</h3>
+
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-icon">🐙</div>
+        <div class="tool-name">GitHub Desktop</div>
+        <div class="tool-desc">La opción más amigable para principiantes. Interfaz limpia, resolución visual de conflictos, integración perfecta con GitHub. <strong>Recomendado para el proyecto.</strong></div>
+        <div style="margin-top: 12px;">
+          <span class="badge-blue">Gratis</span>
+          <span style="margin-left: 6px;" class="badge-git">Windows / Mac</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">💻</div>
+        <div class="tool-name">VS Code — Git Integration</div>
+        <div class="tool-desc">Si ya usás VS Code, tiene Git integrado nativo. La extensión <strong>GitLens</strong> lo lleva al siguiente nivel: historial inline, blame, comparación de ramas.</div>
+        <div style="margin-top: 12px;">
+          <span class="badge-blue">Gratis</span>
+          <span style="margin-left: 6px;" class="badge-green">Multiplataforma</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">🐙</div>
+        <div class="tool-name">GitKraken</div>
+        <div class="tool-desc">El más potente y visual. Árbol de commits espectacular, excelente para entender el historial complejo. Gratis para repos públicos.</div>
+        <div style="margin-top: 12px;">
+          <span class="badge-blue">Freemium</span>
+          <span style="margin-left: 6px;" class="badge-green">Multiplataforma</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">🔷</div>
+        <div class="tool-name">Sourcetree</div>
+        <div class="tool-desc">Desarrollado por Atlassian. Completamente gratuito y muy completo. Excelente para visualizar el árbol de ramas y hacer operaciones complejas.</div>
+        <div style="margin-top: 12px;">
+          <span class="badge-green">100% Gratis</span>
+          <span style="margin-left: 6px;" class="badge-git">Windows / Mac</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-window-stack"></i> Cómo VS Code facilita la resolución de conflictos</h3>
+
+    <div class="git-card">
+      <div class="git-card-title"><i class="bi bi-magic" style="color: var(--accent-blue);"></i> El editor visual de conflictos</div>
+      <p style="font-size: 13.5px; margin-bottom: 10px;">Cuando hay un conflicto, VS Code muestra botones encima del código conflictivo:</p>
+      <div style="background: #1e1e1e; border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+        <div style="background: rgba(56,139,253,0.15); padding: 6px 10px; border-radius: 4px 4px 0 0; font-size: 11px; color: var(--accent-blue);">
+          [ Aceptar cambio actual ] &nbsp; [ Aceptar cambio entrante ] &nbsp; [ Aceptar ambos ] &nbsp; [ Comparar ]
+        </div>
+        <div style="border: 1px solid rgba(255,90,76,0.4); padding: 10px; margin-top: 1px;">
+          <span style="color: rgba(255,90,76,0.7); font-size: 10px;">Current Change</span><br>
+          <span style="color: #7ee787;">app.run(debug=True, host='0.0.0.0', port=5000)</span>
+        </div>
+        <div style="border: 1px solid rgba(46,160,67,0.4); padding: 10px;">
+          <span style="color: rgba(46,160,67,0.7); font-size: 10px;">Incoming Change</span><br>
+          <span style="color: #79c0ff;">app.run(debug=False, port=8080)</span>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;">En lugar de editar el texto manualmente con los marcadores <code>&lt;&lt;&lt;&lt;&lt;</code>, hacés clic en el botón correspondiente y VS Code resuelve el conflicto automáticamente.</p>
+    </div>
+
+    <h3 class="sub-heading"><i class="bi bi-trophy"></i> Resumen: El flujo completo del equipo</h3>
+
+    <div class="git-card">
+      <table class="git-table">
+        <thead>
+          <tr><th>Momento</th><th>Quién</th><th>Comando/Acción</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Inicio del proyecto</td>
+            <td>Líder</td>
+            <td><code>git init</code> + <code>git remote add</code> + primer commit</td>
+          </tr>
+          <tr>
+            <td>Unirse al proyecto</td>
+            <td>Todos</td>
+            <td><code>git clone &lt;url&gt;</code></td>
+          </tr>
+          <tr>
+            <td>Empezar a trabajar</td>
+            <td>Cada uno</td>
+            <td><code>git checkout -b feature/mi-tarea</code></td>
+          </tr>
+          <tr>
+            <td>Guardar avances</td>
+            <td>Cada uno</td>
+            <td><code>git add .</code> → <code>git commit -m "..."</code></td>
+          </tr>
+          <tr>
+            <td>Subir mi trabajo</td>
+            <td>Cada uno</td>
+            <td><code>git push origin mi-rama</code></td>
+          </tr>
+          <tr>
+            <td>Actualizar mi rama</td>
+            <td>Cada uno</td>
+            <td><code>git pull origin main</code> → <code>git merge main</code></td>
+          </tr>
+          <tr>
+            <td>Integrar al proyecto</td>
+            <td>Líder/todos</td>
+            <td><code>git checkout main</code> → <code>git merge mi-rama</code> → <code>git push</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert-green">
+      <div class="alert-title"><i class="bi bi-stars"></i> ¡Felicitaciones! Ya sabés Git para trabajar en equipo</div>
+      <p style="font-size: 13.5px;">Con estos conceptos podés manejar el 95% de las situaciones en un proyecto grupal. El otro 5% son casos especiales (<code>git rebase</code>, <code>git stash</code>, <code>cherry-pick</code>) que aprenderás con el tiempo. Por ahora, con esto están más que cubiertos para el proyecto Flask. ¡A programar!</p>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: var(--bg-card-2); border-radius: 10px; border: 1px solid var(--border-color); text-align: center;">
+      <div style="font-size: 28px; margin-bottom: 8px;">🚀</div>
+      <div style="font-weight: 700; color: var(--text-bright); font-size: 17px;">¡Listos para el proyecto!</div>
+      <div style="color: var(--text-muted); font-size: 13.5px; margin-top: 6px;">Repasá cualquier sección usando el menú lateral. Git se aprende haciendo.</div>
+      <button class="nav-sec-btn next-btn" style="margin: 16px auto 0;" onclick="showSection('intro')">
+        <i class="bi bi-arrow-counterclockwise"></i> Volver al inicio
+      </button>
+    </div>
+
+    <div class="section-nav-buttons">
+      <button class="nav-sec-btn" onclick="showSection('merge')"><i class="bi bi-arrow-left"></i> Anterior</button>
+      <div></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── SECTIONS CONFIG ──
+  const sections = [
+    { id: 'intro',    label: 'Inicio & ¿Por qué Git?' },
+    { id: 'setup',    label: 'Instalación & Config' },
+    { id: 'gitignore',label: '.gitignore & Flask' },
+    { id: 'repos',    label: 'Repositorios' },
+    { id: 'staging',  label: 'Staging & Commits' },
+    { id: 'remote',   label: 'Push, Pull & Log' },
+    { id: 'branches', label: 'Ramas (Branches)' },
+    { id: 'merge',    label: 'Merge & Conflictos' },
+    { id: 'tools',    label: 'Herramientas GUI' },
+  ];
+
+  const visited = new Set(['intro']);
+
+  function showSection(id) {
+    // Hide all
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+
+    // Show target
+    const target = document.getElementById('section-' + id);
+    if (target) target.classList.add('active');
+
+    // Update nav
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + id + "'")) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Update breadcrumb
+    const section = sections.find(s => s.id === id);
+    if (section) {
+      document.getElementById('breadcrumb-text').textContent = section.label;
+    }
+
+    // Update progress
+    visited.add(id);
+    const pct = Math.round((visited.size / sections.length) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = pct + '% completado';
+
+    // Scroll to top
+    document.getElementById('main-content').scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Close sidebar on mobile
+    if (window.innerWidth < 768) closeSidebar();
+  }
+
+  // ── COPY TERMINAL ──
+  function copyTerminal(btn) {
+    const body = btn.closest('.terminal').querySelector('.terminal-body');
+    const text = body.innerText
+      .split('\n')
+      .map(line => {
+        const m = line.match(/^\$\s+(.+)/);
+        return m ? m[1] : (line.startsWith('#') ? line : null);
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ copiado';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      btn.textContent = 'error';
+      setTimeout(() => { btn.textContent = 'copiar'; }, 2000);
+    });
+  }
+
+  // ── SIDEBAR MOBILE ──
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+
+  // Initialize
+  showSection('intro');
+</script>
+</body>
+</html>
