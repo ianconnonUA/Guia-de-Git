@@ -1465,15 +1465,15 @@
   </section>
 
   <!-- ═══════════════════ SECCIÓN 8: MERGE & CONFLICTOS ═══════════════════ -->
-  <section id="section-merge" class="content-section">
+<section id="section-merge" class="content-section">
     <div class="section-title">
       <div class="title-icon"><i class="bi bi-intersect"></i></div>
       Merge & Resolución de Conflictos
     </div>
-    <p class="section-subtitle">Fusionando el trabajo del equipo y sobreviviendo a los conflictos.</p>
+    <p class="section-subtitle">Fusionando el trabajo del equipo y sobreviviendo al temido mensaje de "CONFLICT".</p>
 
-    <h3 class="sub-heading"><i class="bi bi-git"></i> git merge — Fusionar ramas</h3>
-    <p style="margin-bottom: 10px;">Cuando terminás tu funcionalidad, la integrás a <code>main</code>. El proceso es siempre el mismo:</p>
+    <h3 class="sub-heading"><i class="bi bi-git"></i> git merge — Fusionar ramas (El caso ideal)</h3>
+    <p style="margin-bottom: 10px;">Cuando terminás tu funcionalidad y nadie tocó tus mismos archivos, la integración a <code>main</code> es limpia y automática:</p>
 
     <ul class="step-list">
       <li>
@@ -1483,88 +1483,93 @@
           <div class="terminal">
             <div class="terminal-header">
               <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-              <div class="terminal-title">git merge — Paso a paso</div>
+              <div class="terminal-title">git merge — Paso a paso (Sin conflictos)</div>
               <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
             </div>
             <div class="terminal-body">
               <span class="t-comment"># 1. Ir a la rama principal:</span><br>
               <span class="t-prompt">$ </span><span class="t-cmd">git checkout <span class="t-branch">main</span></span><br><br>
 
-              <span class="t-comment"># 2. Traer lo último de GitHub:</span><br>
+              <span class="t-comment"># 2. Traer lo último de GitHub por las dudas:</span><br>
               <span class="t-prompt">$ </span><span class="t-cmd">git pull origin <span class="t-branch">main</span></span><br><br>
 
               <span class="t-comment"># 3. Fusionar tu rama con main:</span><br>
               <span class="t-prompt">$ </span><span class="t-cmd">git merge <span class="t-branch">feature/login</span></span><br>
-              <span class="t-output">Updating 9e2f341..3f4a2b1</span><br>
               <span class="t-output">Fast-forward</span><br>
               <span class="t-output"> app.py              | 15 +++++++++++++++</span><br>
-              <span class="t-output"> templates/login.html | 42 ++++++++++++++++++++++++++++++++++++++++++</span><br>
-              <span class="t-output"> 2 files changed, 57 insertions(+)</span><br><br>
-
-              <span class="t-comment"># 4. Subir el main actualizado:</span><br>
-              <span class="t-prompt">$ </span><span class="t-cmd">git push origin <span class="t-branch">main</span></span>
+              <span class="t-output"> 1 file changed, 15 insertions(+)</span>
             </div>
           </div>
         </div>
       </li>
     </ul>
 
-    <h3 class="sub-heading"><i class="bi bi-exclamation-triangle-fill" style="color: #f85149;"></i> Conflictos de Merge — ¡No entres en pánico!</h3>
+    <h3 class="sub-heading"><i class="bi bi-exclamation-triangle-fill" style="color: #f85149;"></i> Un Caso Real de Conflicto — ¡No entres en pánico!</h3>
 
     <div class="alert-yellow">
-      <div class="alert-title"><i class="bi bi-question-circle-fill"></i> ¿Por qué ocurre un conflicto?</div>
-      <p style="font-size: 13.5px;">Un conflicto ocurre cuando <strong>dos personas modificaron exactamente la misma línea</strong> del mismo archivo. Git no sabe cuál versión es la "correcta", entonces te pide que vos lo decidas manualmente.<br>
-      <span style="margin-top: 6px; display: block;">Por ejemplo: Juan editó la línea 15 de <code>app.py</code> y María también editó la línea 15 de <code>app.py</code>. Cuando se intenta hacer merge → 💥 conflicto.</span></p>
+      <div class="alert-title"><i class="bi bi-lightning-fill"></i> El Escenario</div>
+      <p style="font-size: 13.5px;">
+        <strong>María</strong> y <strong>Juan</strong> están trabajando en ramas separadas, pero ambos abrieron <code>app.py</code> y editaron la misma ruta <code>/home</code>.<br><br>
+        👩🏽 <strong>María</strong> agregó una variable <code>titulo="Dashboard"</code> y ya hizo merge de su rama a <code>main</code>.<br>
+        👨🏻 <strong>Juan</strong> (vos) en su rama agregó una validación de <code>user_role="Admin"</code> a la misma ruta. Al intentar fusionar tu rama con el <code>main</code> que ya tiene los cambios de María... 💥 Git no sabe qué hacer.
+      </p>
     </div>
 
-    <h3 class="sub-heading"><i class="bi bi-code-square"></i> ¿Cómo se ve un conflicto?</h3>
-    <p style="margin-bottom: 10px;">Git modifica el archivo afectado y agrega marcadores especiales:</p>
+    <p style="margin-bottom: 10px;">Así se ve el error en tu terminal cuando intentas hacer el merge:</p>
 
-    <div class="conflict-block">
-      <div class="conflict-block-header">⚠ CONFLICTO DETECTADO — app.py — línea 15</div>
-      <div class="conflict-block-body">
-        <span style="color: var(--text-muted);">...</span><br><br>
-        <span class="t-conflict-head"><<<<<<< HEAD</span><br>
-        <span class="t-comment"># Esta es TU versión (la que está en la rama actual, ej: main)</span><br>
-        <span style="color: #7ee787;">app.run(debug=True, host='0.0.0.0', port=5000)</span><br>
-        <span class="t-conflict-sep">=======</span><br>
-        <span class="t-comment"># Esta es la versión de tu compañero (la rama que estás mergeando)</span><br>
-        <span style="color: #79c0ff;">app.run(debug=False, port=8080)</span><br>
-        <span class="t-conflict-branch">>>>>>>> feature/config-servidor</span><br><br>
-        <span style="color: var(--text-muted);">...</span>
+    <div class="terminal" style="border-color: #f85149;">
+      <div class="terminal-header">
+        <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+        <div class="terminal-title" style="color: #f85149;">¡Alerta de Conflicto!</div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-prompt">$ </span><span class="t-cmd">git merge <span class="t-branch">feature/juan-home</span></span><br>
+        <span class="t-output">Auto-merging app.py</span><br>
+        <span class="t-error">CONFLICT (content): Merge conflict in app.py</span><br>
+        <span class="t-error">Automatic merge failed; fix conflicts and then commit the result.</span>
       </div>
     </div>
 
-    <div class="git-card">
-      <div class="git-card-title"><i class="bi bi-info-circle" style="color: var(--accent-blue);"></i> Leyendo los marcadores</div>
-      <ul style="font-size: 13.5px; padding-left: 18px;">
-        <li><span style="color: #ff7b72;"><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code></span> → Empieza TU versión (la rama donde estás parado actualmente).</li>
-        <li style="margin-top: 6px;"><span style="color: var(--accent-yellow);"><code>=======</code></span> → Separador entre las dos versiones.</li>
-        <li style="margin-top: 6px;"><span style="color: #7ee787;"><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/config-servidor</code></span> → Empieza la versión de la otra rama.</li>
-      </ul>
-    </div>
-
-    <h3 class="sub-heading"><i class="bi bi-wrench"></i> Cómo resolver el conflicto — paso a paso</h3>
+    <h3 class="sub-heading"><i class="bi bi-wrench"></i> Cómo resolverlo paso a paso</h3>
 
     <ul class="step-list">
       <li>
         <div class="step-num">1</div>
         <div>
-          <strong style="color: var(--text-bright);">Abrí el archivo conflictivo</strong> en tu editor (VS Code lo resalta en rojo/verde automáticamente). Hablá con tu compañero y decidí juntos cuál es la versión correcta.
+          <strong style="color: var(--text-bright);">Abrí el archivo conflictivo (app.py)</strong> en VS Code. Vas a ver que Git inyectó unas marcas raras para mostrarte las dos versiones enfrentadas.
         </div>
       </li>
+    </ul>
+
+    <div class="conflict-block">
+      <div class="conflict-block-header">⚠ CONFLICTO DETECTADO — app.py — línea 22</div>
+      <div class="conflict-block-body">
+        <span style="color: var(--text-muted);">@app.route('/home')</span><br>
+        <span style="color: var(--text-muted);">def home():</span><br>
+        <span class="t-conflict-head"><<<<<<< HEAD (main - Cambios de María)</span><br>
+        <span style="color: #7ee787;">&nbsp;&nbsp;&nbsp;&nbsp;return render_template('home.html', titulo="Dashboard")</span><br>
+        <span class="t-conflict-sep">=======</span><br>
+        <span style="color: #79c0ff;">&nbsp;&nbsp;&nbsp;&nbsp;return render_template('home.html', user_role="Admin")</span><br>
+        <span class="t-conflict-branch">>>>>>>> feature/juan-home (Tus cambios)</span><br>
+      </div>
+    </div>
+
+    <ul class="step-list">
       <li>
         <div class="step-num">2</div>
         <div>
-          <strong style="color: var(--text-bright);">Editá el archivo manualmente</strong>. Borrá los marcadores y dejá solo el código correcto. Por ejemplo, si deciden combinar ambos:
+          <strong style="color: var(--text-bright);">Limpiá el código y combinalo.</strong> Borrá las marcas de Git (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>) y armá la versión final que incluya el trabajo de ambos. Debería quedar así:
+          
           <div class="terminal" style="margin-top: 10px;">
             <div class="terminal-header">
               <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-              <div class="terminal-title">app.py — Después de resolver</div>
+              <div class="terminal-title">app.py — Archivo resuelto y limpio</div>
             </div>
             <div class="terminal-body">
-              <span class="t-comment"># Borraste los marcadores, quedó el código correcto:</span><br>
-              <span style="color: #7ee787;">app.run(debug=True, host='0.0.0.0', port=5000)</span>
+              <span style="color: var(--text-muted);">@app.route('/home')</span><br>
+              <span style="color: var(--text-muted);">def home():</span><br>
+              <span class="t-comment">&nbsp;&nbsp;&nbsp;&nbsp;# Combinamos el título de María y el user_role tuyo:</span><br>
+              <span style="color: #7ee787;">&nbsp;&nbsp;&nbsp;&nbsp;return render_template('home.html', titulo="Dashboard", user_role="Admin")</span>
             </div>
           </div>
         </div>
@@ -1572,22 +1577,22 @@
       <li>
         <div class="step-num">3</div>
         <div>
-          <strong style="color: var(--text-bright);">Guardá el archivo y hacé git add</strong> para marcar el conflicto como resuelto:
+          <strong style="color: var(--text-bright);">Guardá el archivo, agregalo y confirmá.</strong> Ahora le decís a Git "Ya lo arreglé, acá está la versión final".
           <div class="terminal" style="margin-top: 10px;">
             <div class="terminal-header">
               <div class="terminal-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-              <div class="terminal-title">Finalizar la resolución del conflicto</div>
+              <div class="terminal-title">Finalizar la resolución en consola</div>
               <button class="copy-btn" onclick="copyTerminal(this)">copiar</button>
             </div>
             <div class="terminal-body">
-              <span class="t-comment"># Marcar el conflicto como resuelto:</span><br>
+              <span class="t-comment"># Marcar el archivo como resuelto:</span><br>
               <span class="t-prompt">$ </span><span class="t-cmd">git add <span class="t-file">app.py</span></span><br><br>
 
-              <span class="t-comment"># Confirmar el merge con un commit:</span><br>
-              <span class="t-prompt">$ </span><span class="t-cmd">git commit -m <span class="t-git">"merge: resolver conflicto en app.py — mantener config debug=True"</span></span><br>
-              <span class="t-output">[main 7c1a3f2] merge: resolver conflicto en app.py</span><br><br>
+              <span class="t-comment"># Completar el merge:</span><br>
+              <span class="t-prompt">$ </span><span class="t-cmd">git commit -m <span class="t-git">"merge: resolver conflicto en /home integrando titulo y user_role"</span></span><br>
+              <span class="t-output">[main 7c1a3f2] merge: resolver conflicto en /home integrando titulo y user_role</span><br><br>
 
-              <span class="t-comment"># Subir el resultado a GitHub:</span><br>
+              <span class="t-comment"># Subir el proyecto funcional a GitHub:</span><br>
               <span class="t-prompt">$ </span><span class="t-cmd">git push origin <span class="t-branch">main</span></span>
             </div>
           </div>
@@ -1596,12 +1601,11 @@
     </ul>
 
     <div class="alert-green">
-      <div class="alert-title"><i class="bi bi-check-circle-fill"></i> Cómo minimizar conflictos</div>
+      <div class="alert-title"><i class="bi bi-check-circle-fill"></i> Cómo minimizar conflictos en el equipo</div>
       <ul style="font-size: 13.5px; padding-left: 18px;">
-        <li><strong>Dividí bien el trabajo:</strong> Cada persona se encarga de archivos o módulos diferentes.</li>
-        <li style="margin-top: 5px;"><strong>Hacé pull frecuentemente:</strong> Al inicio de cada sesión de trabajo.</li>
-        <li style="margin-top: 5px;"><strong>Committeá seguido:</strong> Cambios pequeños y frecuentes evitan divergencias grandes.</li>
-        <li style="margin-top: 5px;"><strong>Comunicate:</strong> "Oye, voy a tocar <code>models.py</code>, ¿alguien lo está usando?"</li>
+        <li><strong>Dividí bien el trabajo:</strong> Si Juan hace el Backend de usuarios, que María haga el Backend de productos. No toquen las mismas rutas al mismo tiempo.</li>
+        <li style="margin-top: 5px;"><strong>Hacé pull frecuentemente:</strong> Así detectás conflictos cuando son chicos, no después de 2 semanas de trabajo aislado.</li>
+        <li style="margin-top: 5px;"><strong>Comunicate:</strong> "Chicos, voy a refactorizar el <code>models.py</code>, traten de no tocarlo por un rato".</li>
       </ul>
     </div>
 
